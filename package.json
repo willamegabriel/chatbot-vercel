@@ -1,8 +1,5 @@
 {
-  "name": "chatbot-vercel",
-  "type": "module",
-  "dependencies": {
-    "langchain": "^0.2.0",
-    "openai": "^4.0.0"
-  }
+  "name": "chatbot-api-test",
+  "version": "1.0.0",
+  "type": "module"
 }
