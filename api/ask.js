@@ -1,5 +1,5 @@
-import { HuggingFaceTransformersEmbeddings } from "langchain-huggingface";
-import { FAISS } from "langchain-community/vectorstores/faiss";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/hf";
+import { FAISS } from "@langchain/community/vectorstores/faiss";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { RetrievalQAChain } from "langchain/chains";
 import path from "path";
@@ -23,25 +23,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log("🧠 Iniciando criação dos embeddings...");
+    console.log("🧠 Iniciando embeddings...");
     const embeddings = new HuggingFaceTransformersEmbeddings({
       modelName: "sentence-transformers/all-MiniLM-L6-v2"
     });
 
     const basePath = path.resolve(process.cwd(), "vetores_site");
     console.log("📁 Carregando FAISS de:", basePath);
-
     const vectorstore = await FAISS.load(basePath, embeddings);
-    console.log("✅ Vetores carregados com sucesso");
+    console.log("✅ Vetores carregados");
 
-    console.log("🤖 Inicializando modelo OpenAI...");
     const model = new ChatOpenAI({
       temperature: 0.2,
       modelName: "gpt-3.5-turbo",
       openAIApiKey: process.env.OPENAI_API_KEY
     });
 
-    console.log("🔗 Criando chain de recuperação...");
+    console.log("🧩 Criando chain de QA...");
     const chain = RetrievalQAChain.fromLLM(model, vectorstore.asRetriever());
 
     console.log("🚀 Executando chain com a pergunta...");
