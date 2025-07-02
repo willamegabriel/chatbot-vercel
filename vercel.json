@@ -1,18 +1,9 @@
 {
-  "name": "chatbot-vercel",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'No build step required'",
-    "start": "vercel dev"
-  },
-  "dependencies": {
-    "@langchain/community": "^0.3.47",
-    "dotenv": "^16.4.5",
-    "langchain": "^0.3.29"
-  },
-  "engines": {
-    "node": ">=18"
-  }
+  "version": 2,
+  "builds": [
+    { "src": "api/ask.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/ask", "dest": "api/ask.js" }
+  ]
 }
