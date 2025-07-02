@@ -1,7 +1,8 @@
-import { HuggingFaceTransformersEmbeddings } from "langchain-community/embeddings/hf";
+import { HuggingFaceTransformersEmbeddings } from "langchain-huggingface";
 import { FAISS } from "langchain-community/vectorstores/faiss";
 import { ChatOpenAI } from "langchain/chat_models/openai";
 import { RetrievalQAChain } from "langchain/chains";
+import path from "path";
 
 export const config = {
   runtime: "nodejs"
@@ -14,13 +15,17 @@ export default async function handler(req, res) {
 
   const { pergunta } = req.body;
 
-  if (!pergunta) {
-    return res.status(400).json({ error: "Pergunta ausente" });
+  if (!pergunta || typeof pergunta !== "string") {
+    return res.status(400).json({ error: "Pergunta ausente ou inválida" });
   }
 
   try {
-    const embeddings = new HuggingFaceTransformersEmbeddings();
-    const vectorstore = await FAISS.load("./vetores_site", embeddings);
+    const embeddings = new HuggingFaceTransformersEmbeddings({
+      modelName: "sentence-transformers/all-MiniLM-L6-v2"
+    });
+
+    const basePath = path.resolve(process.cwd(), "vetores_site");
+    const vectorstore = await FAISS.load(basePath, embeddings);
 
     const model = new ChatOpenAI({
       temperature: 0.2,
@@ -33,7 +38,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ resposta });
   } catch (erro) {
-    console.error(erro);
+    console.error("❌ Erro ao gerar resposta:", erro);
     return res.status(500).json({ error: "Erro interno ao processar a pergunta" });
   }
 }
