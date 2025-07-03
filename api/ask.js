@@ -1,15 +1,18 @@
-// api/ask.js
 import "dotenv/config";
 import fetch from "node-fetch";
 import fs from "fs/promises";
+import path from "path";
+import { fileURLToPath } from "url";
 globalThis.fetch = fetch;
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const GROQ_URL = "https://api.groq.com/openai/v1";
 const GROQ_KEY = process.env.GROQ_API_KEY;
 
 export const config = { runtime: "nodejs" };
 
-// Função de similaridade coseno
+// Cálculo de similaridade coseno
 function cosine(a, b) {
   const dot = a.reduce((acc, ai, i) => acc + ai * b[i], 0);
   const normA = Math.sqrt(a.reduce((acc, ai) => acc + ai * ai, 0));
@@ -17,17 +20,18 @@ function cosine(a, b) {
   return dot / (normA * normB);
 }
 
-// Carrega os embeddings do arquivo
+// Carrega os embeddings
 let docs = null;
 async function loadDocs() {
   if (!docs) {
-    const file = await fs.readFile("./api/data.json", "utf-8");
+    const filePath = path.join(__dirname, "data.json");
+    const file = await fs.readFile(filePath, "utf-8");
     docs = JSON.parse(file);
   }
   return docs;
 }
 
-// Embedding da pergunta (usando OpenAI temporariamente)
+// Gera embedding com OpenAI
 async function embedPergunta(pergunta) {
   const res = await fetch("https://api.openai.com/v1/embeddings", {
     method: "POST",
@@ -45,13 +49,13 @@ async function embedPergunta(pergunta) {
 }
 
 export default async function handler(req, res) {
-  // 🛡️ Habilita CORS para qualquer origem
+  // Libera CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
-    return res.status(200).end(); // Responde ao preflight
+    return res.status(200).end();
   }
 
   if (req.method !== "POST") {
@@ -83,20 +87,17 @@ export default async function handler(req, res) {
       {
         role: "system",
         content:
-          "Você é um assistente útil e responde com base no contexto fornecido. Caso a resposta não esteja contida nele, diga que não sabe.",
+          "Você é um assistente técnico e responde exclusivamente com base no contexto fornecido. Se não souber a resposta, diga 'Não sei'.",
       },
       {
         role: "user",
         content:
-          `Responda à pergunta com base somente no contexto a seguir.\n` +
-          `Se a resposta não estiver nele, diga "Não sei".\n\n` +
           `Contexto:\n${contexto}\n\n` +
           `Pergunta: ${pergunta}\n` +
-          `Resposta:`
-      }
-      
+          `Resposta:`,
+      },
     ];
-ss
+
     const respostaLLM = await fetch(`${GROQ_URL}/chat/completions`, {
       method: "POST",
       headers: {
@@ -114,11 +115,12 @@ ss
     console.log("🧠 Resposta bruta do Groq:\n", JSON.stringify(json, null, 2));
 
     const resposta = json?.choices?.[0]?.message?.content?.trim() ?? "";
-    if (!resposta) console.warn("⚠️ Modelo respondeu vazio");
 
-    return res.status(200).json({ resposta: resposta || "Sem resposta gerada." });
+    return res.status(200).json({
+      resposta: resposta || "Sem resposta gerada.",
+    });
   } catch (err) {
-    console.error("❌ Erro ao responder:", err.stack || err);
+    console.error("❌ Erro ao responder:", err);
     return res.status(500).json({ error: "Erro interno ao processar a pergunta" });
   }
 }
