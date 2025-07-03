@@ -21,7 +21,7 @@ function cosine(a, b) {
 let docs = null;
 async function loadDocs() {
   if (!docs) {
-    const file = await fs.readFile("data.json", "utf-8");
+    const file = await fs.readFile("./api/data.json", "utf-8");
     docs = JSON.parse(file);
   }
   return docs;
