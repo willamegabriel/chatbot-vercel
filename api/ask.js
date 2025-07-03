@@ -9,7 +9,7 @@ const GROQ_KEY = process.env.GROQ_API_KEY;
 
 export const config = { runtime: "nodejs" };
 
-// Similaridade coseno
+// Função de similaridade coseno
 function cosine(a, b) {
   const dot = a.reduce((acc, ai, i) => acc + ai * b[i], 0);
   const normA = Math.sqrt(a.reduce((acc, ai) => acc + ai * ai, 0));
@@ -17,7 +17,7 @@ function cosine(a, b) {
   return dot / (normA * normB);
 }
 
-// Carrega os embeddings dos documentos
+// Carrega os embeddings do arquivo
 let docs = null;
 async function loadDocs() {
   if (!docs) {
@@ -27,7 +27,7 @@ async function loadDocs() {
   return docs;
 }
 
-// (Temporariamente usa OpenAI até Groq fornecer embeddings)
+// Embedding da pergunta (usando OpenAI temporariamente)
 async function embedPergunta(pergunta) {
   const res = await fetch("https://api.openai.com/v1/embeddings", {
     method: "POST",
@@ -45,7 +45,18 @@ async function embedPergunta(pergunta) {
 }
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
+  // 🛡️ Habilita CORS para qualquer origem
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end(); // Responde ao preflight
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método não permitido" });
+  }
 
   const { pergunta } = req.body;
   if (!pergunta || typeof pergunta !== "string") {
@@ -66,7 +77,6 @@ export default async function handler(req, res) {
 
     const contexto = similares.map((s) => `• ${s.texto}`).join("\n");
 
-    // Debug: mostra o contexto no terminal
     console.log("\n📄 Contexto enviado ao Groq:\n" + contexto + "\n");
 
     const mensagens = [
@@ -92,7 +102,7 @@ export default async function handler(req, res) {
         Authorization: `Bearer ${GROQ_KEY}`,
       },
       body: JSON.stringify({
-        model: "llama3-8b-8192", // ⬅️ novo modelo!
+        model: "llama3-8b-8192",
         messages: mensagens,
         temperature: 0.3,
       }),
