@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/ask.js": {
-      "includeFiles": ["api/data.json"]
+      "includeFiles": "api/data.json"
     }
   }
 }
