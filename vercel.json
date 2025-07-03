@@ -3,5 +3,6 @@
     "api/ask.js": {
       "includeFiles": "api/data.json"
     }
-  }
+  },
+  "outputDirectory": "."
 }
