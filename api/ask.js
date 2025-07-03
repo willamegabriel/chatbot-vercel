@@ -88,13 +88,13 @@ export default async function handler(req, res) {
       {
         role: "user",
         content:
-          `Responda à pergunta com base no contexto abaixo. Se a resposta não estiver no contexto, diga que não sabe.\n\n` +
+          `Com base apenas no contexto abaixo, responda de forma clara e objetiva. Se a resposta não estiver no contexto, diga "Não sei".\n\n` +
           `Contexto:\n${contexto}\n\n` +
           `Pergunta: ${pergunta}\n` +
           `Resposta:`,
-      },
+      }
     ];
-
+ss
     const respostaLLM = await fetch(`${GROQ_URL}/chat/completions`, {
       method: "POST",
       headers: {
